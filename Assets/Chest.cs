@@ -2,17 +2,24 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Chest : MonoBehaviour
+public class Chest : MonoBehaviour, Interactable
 {
-    // Start is called before the first frame update
-    void Start()
+    public string Name => "Открыть E";
+    private Animator anim;
+    private AudioSource source;
+
+    public void Interact()
     {
-        
+        anim.Play("Open");
+        source.Play();
+        Destroy(this);  
     }
 
-    // Update is called once per frame
-    void Update()
+    void Start()
     {
-        
+        anim = GetComponent<Animator>();
+        source = GetComponent<AudioSource>();
     }
+
+
 }
