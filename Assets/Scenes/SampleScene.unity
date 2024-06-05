@@ -51023,6 +51023,8 @@ MonoBehaviour:
   sensitivityX: 2
   sensitivityY: 2
   text: {fileID: 16549309}
+  onGround: 1
+  jumpHeight: 100
 --- !u!54 &1628058221
 Rigidbody:
   m_ObjectHideFlags: 0

@@ -14,7 +14,8 @@ public class PlayerConroller : MonoBehaviour
     private Animator anim;
     [SerializeField] TextMeshProUGUI text;
     private bool run = false;
-    private bool jump = false;
+    public bool onGround = true;
+    public float  jumpHeight;
 
     public void Move(InputAction.CallbackContext context)
     {
@@ -53,104 +54,104 @@ public class PlayerConroller : MonoBehaviour
     }
     public void Jump(InputAction.CallbackContext context)
     {
-        if (context.performed)
-        {
-            jump = true;
-            return;
-        }
-        if (context.canceled)
-        {
-            jump = false;
-        }
-
+        if (!context.performed) return;
+        if (!onGround) return;
+        onGround = false;
+        anim.Play("Jump");
+        rb.AddForce(Vector3.up * jumpHeight);
     }
 
 
     public void Update()
     {
-        Vector3 moveDirection = speed * (transform.right * direction.x + transform.forward * direction.y).normalized;
-        if (direction.x > 0)
+        if (onGround)
         {
-            if (direction.y > 0)
+            Vector3 moveDirection = speed * (transform.right * direction.x + transform.forward * direction.y).normalized;
+            if (direction.x > 0)
             {
-                anim.SetBool("Forward",true);
-                if (run)
+                if (direction.y > 0)
                 {
-                    anim.SetBool("Run", true);
+                    anim.SetBool("Forward", true);
+                    anim.SetBool("Right", false);
+                    if (run)
+                    {
+                        anim.SetBool("Run", true);
+                    }
+                    else
+                    {
+                        anim.SetBool("Run", false);
+                    }
+                }
+                else if (direction.y < 0)
+                {
+                    anim.SetBool("Right", false);
+                    anim.SetBool("Back", true);
                 }
                 else
                 {
-                    anim.SetBool("Run",false);
+                    anim.SetBool("Right", true);
                 }
             }
-            else if (direction.y < 0)
+            else if (direction.x < 0)
             {
-                anim.SetBool("Right",false);
-                anim.SetBool("Back",true);
+                if (direction.y > 0)
+                {
+                    anim.SetBool("Forward", true);
+                    anim.SetBool("Left", false);
+                    if (run)
+                    {
+                        anim.SetBool("Run", true);
+                    }
+                    else
+                    {
+                        anim.SetBool("Run", false);
+                    }
+                }
+                else if (direction.y < 0)
+                {
+                    anim.SetBool("Left", false);
+                    anim.SetBool("Back", true);
+                }
+                else
+                {
+                    anim.SetBool("Left", true);
+                }
             }
             else
             {
-                anim.SetBool("Right",true); 
-            }
-        }
-        else if (direction.x < 0)
-        {
-            if (direction.y > 0)
-            {
-                anim.SetBool("Forward", true);
-                if (run)
+                if (direction.y > 0)
                 {
-                    anim.SetBool("Run", true);
+                    anim.SetBool("Forward", true);
+                    if (run)
+                    {
+                        anim.SetBool("Run", true);
+                    }
+                    else
+                    {
+                        anim.SetBool("Run", false);
+                    }
+                }
+                else if (direction.y < 0)
+                {
+                    anim.SetBool("Back", true);
                 }
                 else
                 {
+                    anim.SetBool("Right", false);
+                    anim.SetBool("Left", false);
+                    anim.SetBool("Back", false);
+                    anim.SetBool("Forward", false);
                     anim.SetBool("Run", false);
                 }
             }
-            else if (direction.y < 0)
+            float y = rb.velocity.y;
+            if (run && moveDirection.y > 0)
             {
-                anim.SetBool("Left", false);
-                anim.SetBool("Back", true);
+                moveDirection *= 1.5F;
             }
-            else
-            {
-                anim.SetBool("Left", true);
-            }
+            moveDirection.y = y;
+            rb.velocity = moveDirection;
         }
-        else
-        {
-            if (direction.y > 0)
-            {
-                anim.SetBool("Forward", true);
-                if (run)
-                {
-                    anim.SetBool("Run", true);
-                }
-                else
-                {
-                    anim.SetBool("Run", false);
-                }
-            }
-            else if (direction.y < 0)
-            {
-                anim.SetBool("Back", true);
-            }
-            else
-            {
-                anim.SetBool("Right", false);
-                anim.SetBool("Left", false);
-                anim.SetBool("Back",false);
-                anim.SetBool("Forward",false);
-                anim.SetBool("Run", false);
-            }
-        }
-        float y = rb.velocity.y;
-        if (run && moveDirection.y > 0)
-        {
-            moveDirection *= 1.5F;
-        }
-        moveDirection.y = y;
-        rb.velocity = moveDirection;
         transform.eulerAngles += new Vector3(0, pointer.x * sensitivityX, 0);
         cameraRot.x += -pointer.y * sensitivityY;
         cameraRot.x = Mathf.Clamp(cameraRot.x, -90, 90);
