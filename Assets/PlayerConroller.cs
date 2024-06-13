@@ -15,8 +15,8 @@ public class PlayerConroller : MonoBehaviour
     [SerializeField] TextMeshProUGUI text;
     private bool run = false;
     public bool onGround = true;
-    public float  jumpHeight;
-
+    public float jumpHeight;
+    [SerializeField] Transform target;
     public void Move(InputAction.CallbackContext context)
     {
         direction = context.ReadValue<Vector2>();
@@ -44,13 +44,16 @@ public class PlayerConroller : MonoBehaviour
         if (context.performed)
         {
             run = true;
+            anim.SetBool("Run", true);
             return;
+
         }
         if (context.canceled)
         {
             run = false;
+            anim.SetBool("Run", false);
         }
-        
+
     }
     public void Jump(InputAction.CallbackContext context)
     {
@@ -64,99 +67,44 @@ public class PlayerConroller : MonoBehaviour
 
     public void Update()
     {
+        cameraRot.x += -pointer.y * sensitivityY;
+        cameraRot.x = Mathf.Clamp(cameraRot.x, -90, 90);
+        cam.localRotation = Quaternion.Euler(cameraRot);
+        target.Rotate(Vector3.up, pointer.x);
+        cam.transform.LookAt(target);
+
         if (onGround)
         {
-            Vector3 moveDirection = speed * (transform.right * direction.x + transform.forward * direction.y).normalized;
-            if (direction.x > 0)
+            transform.localEulerAngles = target.localEulerAngles;
+            Vector3 dir = transform.localEulerAngles;
+            if (direction.x == 0 && direction.y == 0)
             {
-                if (direction.y > 0)
-                {
-                    anim.SetBool("Forward", true);
-                    anim.SetBool("Right", false);
-                    if (run)
-                    {
-                        anim.SetBool("Run", true);
-                    }
-                    else
-                    {
-                        anim.SetBool("Run", false);
-                    }
-                }
-                else if (direction.y < 0)
-                {
-                    anim.SetBool("Right", false);
-                    anim.SetBool("Back", true);
-                }
-                else
-                {
-                    anim.SetBool("Right", true);
-                }
+                anim.SetBool("Forward", false);
+                rb.velocity = new Vector3(0, rb.velocity.y, 0);
             }
-            else if (direction.x < 0)
-            {
-                if (direction.y > 0)
-                {
-                    anim.SetBool("Forward", true);
-                    anim.SetBool("Left", false);
-                    if (run)
-                    {
-                        anim.SetBool("Run", true);
-                    }
-                    else
-                    {
-                        anim.SetBool("Run", false);
-                    }
-                }
-                else if (direction.y < 0)
-                {
-                    anim.SetBool("Left", false);
-                    anim.SetBool("Back", true);
-                }
-                else
-                {
-                    anim.SetBool("Left", true);
-                }
-            }
-            else
-            {
-                if (direction.y > 0)
-                {
-                    anim.SetBool("Forward", true);
-                    if (run)
-                    {
-                        anim.SetBool("Run", true);
-                    }
-                    else
-                    {
-                        anim.SetBool("Run", false);
-                    }
-                }
-                else if (direction.y < 0)
-                {
-                    anim.SetBool("Back", true);
-                }
-                else
-                {
-                    anim.SetBool("Right", false);
-                    anim.SetBool("Left", false);
-                    anim.SetBool("Back", false);
-                    anim.SetBool("Forward", false);
-                    anim.SetBool("Run", false);
-                }
-            }
+            else anim.SetBool("Forward", true);
+            if (direction.x == 0 && direction.y == 0) return;
+            if (direction.y > 0 && direction.x > 0) dir.y += 45;
+            if (direction.y > 0 && direction.x < 0) dir.y -= 45;
+            if (direction.y == 0 && direction.x > 0) dir.y += 90;
+            if (direction.y == 0 && direction.x < 0) dir.y -= 90;
+            if (direction.y < 0 && direction.x > 0) dir.y += 135;
+            if (direction.y < 0 && direction.x < 0) dir.y -= 135;
+            if (direction.y < 0 && direction.x == 0) dir.y += 180;
+            transform.localEulerAngles = dir;
+
+
             float y = rb.velocity.y;
-            if (run && moveDirection.y > 0)
+            Vector3 moveDirection = speed * transform.forward.normalized;
+            if (run)
             {
                 moveDirection *= 1.5F;
             }
             moveDirection.y = y;
             rb.velocity = moveDirection;
+
         }
-        transform.eulerAngles += new Vector3(0, pointer.x * sensitivityX, 0);
-        cameraRot.x += -pointer.y * sensitivityY;
-        cameraRot.x = Mathf.Clamp(cameraRot.x, -90, 90);
-        cam.localRotation = Quaternion.Euler(cameraRot);
-        if (Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, 2, ~(1<<3)))
+        if (Physics.Raycast(cam.position, cam.forward, out RaycastHit hit, 2, ~(1 << 3)))
         {
             if (hit.collider.gameObject.TryGetComponent<Interactable>(out Interactable i))
             {
